@@ -42,6 +42,7 @@ local ghosts = {}
 const strs = {"White","Yellow","Green","Red","Blue","Purple",}
 const clrs = {Color3.fromRGB(255, 255, 255),Color3.fromRGB(255, 162, 85),Color3.fromRGB(85, 255, 96),Color3.fromRGB(255, 84, 84),Color3.fromRGB(88, 160, 255),Color3.fromRGB(178, 83, 255),}
 local strtoclr = {} for i,str in pairs(strs) do strtoclr[str] = clrs[i] end
+local rankings = {} for i,str in pairs(strs) do rankings[str] = i end
 
 local function getGhosts()
 	return miscPrefabs:QueryDescendants(`Model[$AltName="`..table.concat(strs,`Ghost"],Model[$AltName="`)..`Ghost"]`)
@@ -51,16 +52,28 @@ local function getGhostColor(model, returnString)
 	return (returnString and model:GetAttribute("AltName"):gsub("Ghost","")) or (strtoclr[model:GetAttribute("AltName"):gsub("Ghost","")]) or Color3.new(1,1,1)
 end
 
+local cache = {}
 local function getRandomGhost()
 	local keys = {}
 	for _,key in pairs(ghosts) do
+		if (os.clock() - (cache[key.model] or 0) < 10) then continue end 
+		cache[key.model] = nil
+		
 		table.insert(keys, key)
 	end
 
 	if #keys == 0 then
 		return nil
 	end
-	local randomIndex = keys[math.random(1, #keys)]
+	
+	table.sort(keys, function(a,b)
+		return rankings[a.color] > rankings[b.color]
+	end)
+	
+	local randomIndex = keys[1] --keys[math.random(1, #keys)]
+	
+	cache[randomIndex.model] = os.clock()
+	
 	table.clear(keys) keys = nil
 	return randomIndex
 end
@@ -95,13 +108,14 @@ end
 local function trackGhost(model)
 	local gui = createESP(model)
 	if not gui then return end
-	ghosts[model] = { model = model, gui = gui }
+	ghosts[model] = { model = model, color = getGhostColor(model, true), gui = gui }
 end
 
 local function untrackGhost(model)
 	if not ghosts[model] then return end
 	if ghosts[model].gui then ghosts[model].gui:Destroy() end 
 	table.clear(ghosts[model])
+	cache[model] = nil
 	ghosts[model] = nil
 end
 
