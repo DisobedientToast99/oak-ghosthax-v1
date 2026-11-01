@@ -1,4 +1,4 @@
-# oak-ghosthax-v2
+# oak-ghosthax-v1
 
 ```lua
 _G._Ghost = {
