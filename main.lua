@@ -1,4 +1,7 @@
-if game.PlaceId ~= 9938675423 then return end
+const placeId = game.PlaceVersion
+const jobId = game.JobId
+
+if placeId ~= 9938675423 then return end
 
 const defaultConfig = {
 	["Keybinds"] = {
@@ -106,40 +109,39 @@ end
 
 local function serverHop()
 	local servers = {}
-	local req = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true")
-	local body = HttpService:JSONDecode(req)
+	local req = game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true")
+	local body = httpService:JSONDecode(req)
 
 	if body and body.data then
 		for i, v in next, body.data do
-			if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= JobId then
+			if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= jobId then
 				table.insert(servers, 1, v.id)
 			end
 		end
 	end
 
 	if #servers > 0 then
-		TeleportService:TeleportToPlaceInstance(PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
-	else
-		return notify("Serverhop", "Couldn't find a server.")
+		teleportService:TeleportToPlaceInstance(placeId, servers[math.random(1, #servers)], player)
 	end
-
 end
 
 userInputService.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed then return end
 
 	if input.KeyCode == (_G._Ghost.Keybinds.TeleportToNextGhost) then
-		player.Character:WaitForChild("HumanoidRootPart").Postion = getRandomGhost().model.PrimaryPart.Postion+Vector3.yAxis*3
+		local g = getRandomGhost()
+		if not g then return end
+		player.Character:WaitForChild("HumanoidRootPart").Postion = g.model.PrimaryPart.Postion+Vector3.yAxis*3
 	elseif input.KeyCode == (_G._Ghost.Keybinds.ServerHop) then
 		serverHop()
 	end
 end)
 
-local elapsed,working = math.huge,0
+local elapsed = math.huge
 runService.RenderStepped:Connect(function(dt)
 	elapsed += dt
-	if (elapsed < 0.2 or working > 0) then return end
-	elapsed = 0 working = 2
+	if (elapsed < 0.2) then return end
+	elapsed = 0
 
 	task.spawn(function()
 		for model, entry in pairs(ghosts) do
@@ -147,7 +149,6 @@ runService.RenderStepped:Connect(function(dt)
 				untrackGhost(model)
 			end
 		end
-		working-=1
 	end)
 
 	task.spawn(function()
@@ -156,6 +157,5 @@ runService.RenderStepped:Connect(function(dt)
 				trackGhost(ghost)
 			end
 		end
-		working-=1
 	end)
 end)
