@@ -129,7 +129,7 @@ userInputService.InputBegan:Connect(function(input, gameProcessed)
 	if input.KeyCode == (_G._Ghost.Keybinds.TeleportToNextGhost) then
 		local g = getRandomGhost()
 		if not g then return end
-		player.Character:WaitForChild("HumanoidRootPart").Postion = g.model.PrimaryPart.Postion+Vector3.yAxis*3
+		player.Character:WaitForChild("HumanoidRootPart").Position = g.model.PrimaryPart.Position+Vector3.yAxis*3
 	elseif input.KeyCode == (_G._Ghost.Keybinds.ServerHop) then
 		serverHop()
 	end
