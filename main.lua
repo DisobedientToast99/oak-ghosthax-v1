@@ -106,24 +106,23 @@ end
 
 local function serverHop()
 	local servers = {}
-	local success, result = pcall(function()
-		return httpService:JSONDecode(game:HttpGet(
-			string.format("https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100", game.PlaceId)
-			))
-	end)
+	local req = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Desc&limit=100&excludeFullGames=true")
+	local body = HttpService:JSONDecode(req)
 
-	if success and result and result.data then
-		for _, server in pairs(result.data) do
-			if server.playing < server.maxPlayers and server.id ~= game.JobId then
-				table.insert(servers, server.id)
+	if body and body.data then
+		for i, v in next, body.data do
+			if type(v) == "table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing < v.maxPlayers and v.id ~= JobId then
+				table.insert(servers, 1, v.id)
 			end
 		end
-
-		if #servers > 0 then
-			local randomServerId = servers[math.random(1, #servers)]
-			teleportService:TeleportToPlaceInstance(game.PlaceId, randomServerId, player)
-		end
 	end
+
+	if #servers > 0 then
+		TeleportService:TeleportToPlaceInstance(PlaceId, servers[math.random(1, #servers)], Players.LocalPlayer)
+	else
+		return notify("Serverhop", "Couldn't find a server.")
+	end
+
 end
 
 userInputService.InputBegan:Connect(function(input, gameProcessed)
