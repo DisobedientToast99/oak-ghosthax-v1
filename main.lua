@@ -1,8 +1,6 @@
 const placeId = game.PlaceVersion
 const jobId = game.JobId
 
-if placeId ~= 9938675423 then return end
-
 const defaultConfig = {
 	["Keybinds"] = {
 		TeleportToNextGhost = Enum.KeyCode.Z,
